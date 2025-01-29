@@ -40,5 +40,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.22.0"
+  },
+  "dependencies": {
+    "@qytera/xray-client": "^0.0.2",
+    "jira.js": "^4.0.6"
   }
 }
