@@ -42,7 +42,7 @@
     "typescript-eslint": "^8.22.0"
   },
   "dependencies": {
-    "@qytera/xray-client": "^0.0.2",
+    "@qytera/xray-client": "^0.0.3",
     "jira.js": "^4.0.6"
   }
 }
