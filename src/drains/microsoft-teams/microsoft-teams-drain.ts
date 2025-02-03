@@ -1,4 +1,4 @@
-import type { TestPlan } from "../../models/testplan-model.js";
+import type { TestPlan } from "../../models/test-plan-model.js";
 import type { Drain } from "../drain.js";
 import { getTestPlanCard } from "./cards.js";
 

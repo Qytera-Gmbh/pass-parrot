@@ -1,4 +1,4 @@
-import type { TestPlan } from "../models/testplan-model.js";
+import type { TestPlan } from "../models/test-plan-model.js";
 
 /**
  * A drain represents a service or tool to which test information can be pushed, such as Slack,

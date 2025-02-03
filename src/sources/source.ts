@@ -1,10 +1,12 @@
-import type { TestPlan } from "../models/testplan-model.js";
+import { TestExecution } from "../models/test-execution-model.js";
+import type { TestPlan } from "../models/test-plan-model.js";
 
 /**
  * A source represents a service or tool from which test information can be pulled, such as Xray or
  * an Excel sheet.
  */
-export interface Source<TestPlanFilter> {
+export interface Source<TestPlanFilter, TestExecutionFilter> {
+  getTestExecution(testExecution: TestExecutionFilter): Promise<TestExecution> | TestExecution;
   /**
    * Retrieves a test plan, containing one or more tests.
    *

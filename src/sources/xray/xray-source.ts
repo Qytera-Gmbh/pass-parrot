@@ -3,7 +3,7 @@ import { XrayClientServer } from "@qytera/xray-client";
 import type { Version3Client } from "jira.js";
 import { Version2Client } from "jira.js";
 import type { SearchForIssuesUsingJqlPost } from "jira.js/out/version3/parameters/index.js";
-import type { TestPlan } from "../../models/testplan-model.js";
+import type { TestPlan } from "../../models/test-plan-model.js";
 import type { Source } from "../source.js";
 import { convertStatus } from "./xray-status.js";
 
@@ -11,7 +11,7 @@ import { convertStatus } from "./xray-status.js";
  * The Xray source is responsible for fetching test report data from
  * [Xray](https://www.getxray.app/).
  */
-export class XraySource implements Source<string> {
+export class XraySource implements Source<string, string> {
   private readonly config: XraySourceOptions;
 
   /**

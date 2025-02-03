@@ -1,4 +1,4 @@
-import type { TestPlan } from "../../models/testplan-model.js";
+import type { TestPlan } from "../../models/test-plan-model.js";
 import { createPieChart } from "./card-chart.js";
 import type { AdaptiveCard } from "./card-model.js";
 
