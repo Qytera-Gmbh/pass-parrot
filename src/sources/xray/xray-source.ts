@@ -4,6 +4,7 @@ import type { Version3Client } from "jira.js";
 import { Version2Client } from "jira.js";
 import type { TestPlan } from "../../models/testplan-model.js";
 import type { Source } from "../source.js";
+import { convertStatus } from "./xray-status.js";
 
 export class XraySource implements Source<string> {
   private readonly config: XraySourceOptions;
@@ -52,7 +53,10 @@ export class XraySource implements Source<string> {
         (testPlanResults) => [
           testPlanResults.results((testPlan) => [
             testPlan.tests({ limit: 100, start: startAt }, (testResults) => [
-              testResults.results((test) => [test.jira({ fields: ["key", "summary"] })]),
+              testResults.results((test) => [
+                test.jira({ fields: ["key", "summary"] }),
+                test.status({}, (testStatusType) => [testStatusType.name]),
+              ]),
             ]),
           ]),
         ]
@@ -62,9 +66,10 @@ export class XraySource implements Source<string> {
         hasMoreTests = false;
       } else {
         for (const issue of returnedTests) {
-          if (issue?.jira) {
+          if (issue?.jira && issue.status?.name) {
             parsedTestPlan.tests.push({
               name: issue.jira.summary as string,
+              status: convertStatus(issue.status.name),
               url: `${args.url}/browse/${issue.jira.key as string}`,
             });
           }
@@ -85,13 +90,22 @@ export class XraySource implements Source<string> {
       tests: [],
     };
     const tests = await args.xrayClient.testPlans.getTests(args.testPlanKey);
-    const testKeys = tests.map((test) => test.key);
+    const testsByKey = new Map<
+      string,
+      {
+        id: number;
+        latestStatus: string;
+      }
+    >();
+    for (const test of tests) {
+      testsByKey.set(test.key, { id: test.id, latestStatus: test.latestStatus });
+    }
     let startAt = 0;
     let hasMoreTests = true;
     while (hasMoreTests) {
       const query = {
         fields: ["summary", "key", "id"],
-        jql: `issue in (${testKeys.join(",")})`,
+        jql: `issue in (${[...testsByKey.keys()].join(",")})`,
         startAt: startAt,
       };
       let result;
@@ -105,8 +119,13 @@ export class XraySource implements Source<string> {
         hasMoreTests = false;
       } else {
         for (const issue of result.issues) {
+          const xrayTest = testsByKey.get(issue.key);
+          if (!xrayTest) {
+            throw new Error(`Unexpected error occurred: ${issue.key} was not returned by Xray`);
+          }
           testPlan.tests.push({
             name: issue.fields.summary,
+            status: convertStatus(xrayTest.latestStatus),
             url: `${args.url}/browse/${issue.key}`,
           });
         }
