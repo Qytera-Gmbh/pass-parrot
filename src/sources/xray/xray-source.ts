@@ -2,8 +2,10 @@ import type { XrayClientCloud } from "@qytera/xray-client";
 import { XrayClientServer } from "@qytera/xray-client";
 import type { Version3Client } from "jira.js";
 import { Version2Client } from "jira.js";
+import type { ProjectDetails } from "jira.js/out/version3/models/index.js";
 import type { SearchForIssuesUsingJqlPost } from "jira.js/out/version3/parameters/index.js";
 import type { TestExecution } from "../../models/test-execution-model.js";
+import type { Test } from "../../models/test-model.js";
 import type { TestPlan } from "../../models/test-plan-model.js";
 import type { Source } from "../source.js";
 import { convertStatus } from "./xray-status.js";
@@ -75,34 +77,76 @@ export class XraySource implements Source<string, string> {
         { jql: `issue in (${args.testPlanKey})`, limit: 1 },
         (testPlanResults) => [
           testPlanResults.results((testPlan) => [
-            testPlan.jira({ fields: ["summary"] }),
+            testPlan.jira({ fields: ["summary", "project"] }),
             testPlan.tests({ limit: 100, start: startAt }, (testResults) => [
               testResults.results((test) => [
                 test.jira({ fields: ["key", "summary"] }),
-                test.status({}, (testStatusType) => [testStatusType.name]),
+                test.testRuns({ limit: 1 }, (testRunResults) => [
+                  testRunResults.results((testRun) => [
+                    testRun.status((status) => [status.name]),
+                    testRun.testExecution((testExecution) => [
+                      testExecution.jira({ fields: ["key"] }),
+                    ]),
+                  ]),
+                ]),
               ]),
             ]),
           ]),
         ]
       );
-      parsedTestPlan.name = response.results?.at(0)?.jira?.summary as string;
-      const returnedTests = response.results?.at(0)?.tests?.results;
+      const result = response.results?.at(0);
+      if (!result) {
+        throw new Error(`failed to find test plan ${args.testPlanKey}`);
+      }
+      const testPlanProject = result.jira?.project as ProjectDetails | undefined;
+      const projectKey = testPlanProject?.key;
+      if (!projectKey) {
+        throw new Error(`failed to retrieve project of test plan ${args.testPlanKey}`);
+      }
+      parsedTestPlan.name = result.jira?.summary as string;
+      const returnedTests = result.tests?.results;
       if (!returnedTests || returnedTests.length === 0) {
         hasMoreTests = false;
       } else {
-        for (const issue of returnedTests) {
-          if (issue?.jira && issue.status?.name) {
+        for (const testIssue of returnedTests) {
+          if (!testIssue?.jira) {
+            continue;
+          }
+          const test: Test = {
+            id: testIssue.jira.key as string,
+            name: testIssue.jira.summary as string,
+            url: `${args.url}/browse/${testIssue.jira.key as string}`,
+          };
+          const testExecutionKey = testIssue.testRuns?.results?.at(0)?.testExecution?.jira?.key as
+            | string
+            | undefined;
+          if (!testExecutionKey) {
             parsedTestPlan.tests.push({
               result: {
-                status: convertStatus(issue.status.name),
-                url: `${args.url}/browse/${issue.jira.key as string}`,
+                status: "pending",
+                url: `${args.url}/browser/${args.testPlanKey}`,
               },
-              test: {
-                id: issue.jira.key as string,
-                name: issue.jira.summary as string,
-                url: `${args.url}/browse/${issue.jira.key as string}`,
-              },
+              test: test,
             });
+          } else {
+            const testRun = testIssue.testRuns?.results?.at(0);
+            if (!testRun?.status?.name) {
+              parsedTestPlan.tests.push({
+                result: {
+                  status: "pending",
+                  url: `${args.url}/browser/${testExecutionKey}`,
+                },
+                test: test,
+              });
+            } else {
+              parsedTestPlan.tests.push({
+                result: {
+                  status: convertStatus(testRun.status.name),
+                  url: `${args.url}/projects/${projectKey}?selectedItem=com.atlassian.plugins.atlassian-connect-plugin%3Acom.xpandit.plugins.xray__testing-board&ac.testExecutionKey=${testExecutionKey}&ac.testKey=${testIssue.jira.key as string}`,
+                },
+                test: test,
+              });
+            }
           }
         }
         startAt = startAt + returnedTests.length;

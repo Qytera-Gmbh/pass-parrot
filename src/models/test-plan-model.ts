@@ -15,7 +15,7 @@ export interface TestPlan extends HasId, HasName, HasUrl {
      */
     result: TestResult;
     /**
-     * THe test details.
+     * The test details.
      */
     test: Test;
   }[];
