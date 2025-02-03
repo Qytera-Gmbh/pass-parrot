@@ -20,6 +20,8 @@
 
 A flexible and extensible tool for aggregating test results and forwarding them to various destinations, such as HTML reports, Microsoft Teams or Slack. Designed to bridge the gap between testers and management.
 
+![pass parrot flow](./docs/flow.svg)
+
 Planned features:
 
 - Xray test results aggregation
