@@ -1,5 +1,5 @@
-export interface Test {
-  id: string;
-  name: string;
-  url: string;
+import type { HasId, HasName, HasUrl } from "./common-model.js";
+
+export interface Test extends HasId, HasName, HasUrl {
+  // ...
 }

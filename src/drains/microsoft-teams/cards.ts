@@ -20,10 +20,10 @@ export function getTestPlanCard(
   testPlan: TestPlan,
   details?: Record<string, string>
 ): AdaptiveCardMessage {
-  const passedTests = testPlan.tests.filter((test) => test.status === "pass").length;
-  const failedTests = testPlan.tests.filter((test) => test.status === "fail").length;
-  const skippedTests = testPlan.tests.filter((test) => test.status === "skipped").length;
-  const pendingTests = testPlan.tests.filter((test) => test.status === "pending").length;
+  const passedTests = testPlan.tests.filter((test) => test.result.status === "pass").length;
+  const failedTests = testPlan.tests.filter((test) => test.result.status === "fail").length;
+  const skippedTests = testPlan.tests.filter((test) => test.result.status === "skipped").length;
+  const pendingTests = testPlan.tests.filter((test) => test.result.status === "pending").length;
   const totalTests = testPlan.tests.length;
   const testPlanFacts = Object.entries(details ?? {}).map(([key, value]) => {
     return { title: key, value: value };

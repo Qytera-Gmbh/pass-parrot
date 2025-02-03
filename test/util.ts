@@ -32,6 +32,7 @@ export function findFiles(dir: string, filter: (filename: string) => boolean): s
  */
 export function getEnv(
   kind:
+    | "jira-email"
     | "jira-password"
     | "jira-token"
     | "jira-url"
@@ -53,6 +54,9 @@ export function getEnv(
       break;
     case "jira-token":
       value = process.env.JIRA_TOKEN;
+      break;
+    case "jira-email":
+      value = process.env.JIRA_EMAIL;
       break;
     case "jira-username":
       value = process.env.JIRA_USERNAME;

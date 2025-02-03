@@ -3,6 +3,7 @@ import { XrayClientServer } from "@qytera/xray-client";
 import type { Version3Client } from "jira.js";
 import { Version2Client } from "jira.js";
 import type { SearchForIssuesUsingJqlPost } from "jira.js/out/version3/parameters/index.js";
+import type { TestExecution } from "../../models/test-execution-model.js";
 import type { TestPlan } from "../../models/test-plan-model.js";
 import type { Source } from "../source.js";
 import { convertStatus } from "./xray-status.js";
@@ -21,6 +22,15 @@ export class XraySource implements Source<string, string> {
    */
   constructor(config: XraySourceOptions) {
     this.config = config;
+  }
+
+  /**
+   * Retrieves a test execution from the Xray API.
+   *
+   * @param testExecutionKey the test execution to retrieve
+   */
+  public getTestExecution(testExecutionKey: string): Promise<TestExecution> | TestExecution {
+    throw new Error("Method not implemented.");
   }
 
   /**
@@ -83,10 +93,15 @@ export class XraySource implements Source<string, string> {
         for (const issue of returnedTests) {
           if (issue?.jira && issue.status?.name) {
             parsedTestPlan.tests.push({
-              id: issue.jira.key as string,
-              name: issue.jira.summary as string,
-              status: convertStatus(issue.status.name),
-              url: `${args.url}/browse/${issue.jira.key as string}`,
+              result: {
+                status: convertStatus(issue.status.name),
+                url: `${args.url}/browse/${issue.jira.key as string}`,
+              },
+              test: {
+                id: issue.jira.key as string,
+                name: issue.jira.summary as string,
+                url: `${args.url}/browse/${issue.jira.key as string}`,
+              },
             });
           }
         }
@@ -153,10 +168,15 @@ export class XraySource implements Source<string, string> {
             throw new Error(`Unexpected error occurred: ${issue.key} was not returned by Xray`);
           }
           testPlan.tests.push({
-            id: issue.fields.key as string,
-            name: issue.fields.summary,
-            status: convertStatus(xrayTest.latestStatus),
-            url: `${args.url}/browse/${issue.key}`,
+            result: {
+              status: convertStatus(xrayTest.latestStatus),
+              url: `${args.url}/browse/${issue.key}`,
+            },
+            test: {
+              id: issue.fields.key as string,
+              name: issue.fields.summary,
+              url: `${args.url}/browse/${issue.key}`,
+            },
           });
         }
         startAt = startAt + result.issues.length;

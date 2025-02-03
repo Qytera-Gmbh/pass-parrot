@@ -12,7 +12,7 @@ export const XRAY_CLIENT_CLOUD = new XrayClientCloud({
 
 export const JIRA_CLIENT_CLOUD = new Version3Client({
   authentication: {
-    basic: { apiToken: getEnv("jira-token"), email: getEnv("jira-username") },
+    basic: { apiToken: getEnv("jira-token"), email: getEnv("jira-email") },
   },
   host: getEnv("jira-url"),
 });

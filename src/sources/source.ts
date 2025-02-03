@@ -1,4 +1,4 @@
-import { TestExecution } from "../models/test-execution-model.js";
+import type { TestExecution } from "../models/test-execution-model.js";
 import type { TestPlan } from "../models/test-plan-model.js";
 
 /**

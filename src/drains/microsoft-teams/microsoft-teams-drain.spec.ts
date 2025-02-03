@@ -13,14 +13,38 @@ describe(path.relative(process.cwd(), import.meta.filename), () => {
       id: "PAPA-152",
       name: "Test Plan With Tests",
       tests: [
-        { id: "PAPA-151", name: "test 150", status: "pass", url: `${url}/browse/PAPA-151` },
-        { id: "PAPA-150", name: "test 149", status: "pass", url: `${url}/browse/PAPA-150` },
-        { id: "PAPA-68", name: "test 67", status: "fail", url: `${url}/browse/PAPA-68` },
-        { id: "PAPA-67", name: "test 66", status: "fail", url: `${url}/browse/PAPA-67` },
-        { id: "PAPA-66", name: "test 65", status: "pending", url: `${url}/browse/PAPA-66` },
-        { id: "PAPA-9", name: "test 8", status: "pending", url: `${url}/browse/PAPA-9` },
-        { id: "PAPA-8", name: "test 7", status: "skipped", url: `${url}/browse/PAPA-8` },
-        { id: "PAPA-7", name: "test 6", status: "skipped", url: `${url}/browse/PAPA-7` },
+        {
+          result: { status: "pass", url: `${url}/browse/PAPA-151` },
+          test: { id: "PAPA-151", name: "test 150", url: `${url}/browse/PAPA-151` },
+        },
+        {
+          result: { status: "pass", url: `${url}/browse/PAPA-150` },
+          test: { id: "PAPA-150", name: "test 149", url: `${url}/browse/PAPA-150` },
+        },
+        {
+          result: { status: "fail", url: `${url}/browse/PAPA-68` },
+          test: { id: "PAPA-68", name: "test 67", url: `${url}/browse/PAPA-68` },
+        },
+        {
+          result: { status: "fail", url: `${url}/browse/PAPA-67` },
+          test: { id: "PAPA-67", name: "test 66", url: `${url}/browse/PAPA-67` },
+        },
+        {
+          result: { status: "pending", url: `${url}/browse/PAPA-66` },
+          test: { id: "PAPA-66", name: "test 65", url: `${url}/browse/PAPA-66` },
+        },
+        {
+          result: { status: "pending", url: `${url}/browse/PAPA-9` },
+          test: { id: "PAPA-9", name: "test 8", url: `${url}/browse/PAPA-9` },
+        },
+        {
+          result: { status: "skipped", url: `${url}/browse/PAPA-8` },
+          test: { id: "PAPA-8", name: "test 7", url: `${url}/browse/PAPA-8` },
+        },
+        {
+          result: { status: "skipped", url: `${url}/browse/PAPA-7` },
+          test: { id: "PAPA-7", name: "test 6", url: `${url}/browse/PAPA-7` },
+        },
       ],
       url: `${url}/browse/PAPA-152`,
     });
