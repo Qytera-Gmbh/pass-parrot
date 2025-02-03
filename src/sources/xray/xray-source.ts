@@ -7,9 +7,18 @@ import type { TestPlan } from "../../models/testplan-model.js";
 import type { Source } from "../source.js";
 import { convertStatus } from "./xray-status.js";
 
+/**
+ * The Xray source is responsible for fetching test report data from
+ * [Xray](https://www.getxray.app/).
+ */
 export class XraySource implements Source<string> {
   private readonly config: XraySourceOptions;
 
+  /**
+   * Constructs a new Xray source based on the provided options.
+   *
+   * @param config the source configuration
+   */
   constructor(config: XraySourceOptions) {
     this.config = config;
   }
