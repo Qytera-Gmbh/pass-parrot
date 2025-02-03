@@ -26,8 +26,53 @@ export class XraySource implements Source<string> {
         xrayClient: this.config.xray.client,
       });
     } else {
-      throw new Error("Not yet implemented");
+      return XraySource.getTestPlanCloud({
+        jiraClient: this.config.jira.client,
+        testPlanKey: testPlanKey,
+        url: this.config.jira.url,
+        xrayClient: this.config.xray.client,
+      });
     }
+  }
+
+  private static async getTestPlanCloud(args: {
+    jiraClient: Version2Client | Version3Client;
+    testPlanKey: string;
+    url: string;
+    xrayClient: XrayClientCloud;
+  }): Promise<TestPlan> {
+    const parsedTestPlan: TestPlan = {
+      tests: [],
+    };
+    let startAt = 0;
+    let hasMoreTests = true;
+    while (hasMoreTests) {
+      const response = await args.xrayClient.graphql.getTestPlans.query(
+        { jql: `issue in (${args.testPlanKey})`, limit: 1 },
+        (testPlanResults) => [
+          testPlanResults.results((testPlan) => [
+            testPlan.tests({ limit: 100, start: startAt }, (testResults) => [
+              testResults.results((test) => [test.jira({ fields: ["key", "summary"] })]),
+            ]),
+          ]),
+        ]
+      );
+      const returnedTests = response.results?.at(0)?.tests?.results;
+      if (!returnedTests || returnedTests.length === 0) {
+        hasMoreTests = false;
+      } else {
+        for (const issue of returnedTests) {
+          if (issue?.jira) {
+            parsedTestPlan.tests.push({
+              name: issue.jira.summary as string,
+              url: `${args.url}/browse/${issue.jira.key as string}`,
+            });
+          }
+        }
+        startAt = startAt + returnedTests.length;
+      }
+    }
+    return parsedTestPlan;
   }
 
   private static async getTestPlanServer(args: {
