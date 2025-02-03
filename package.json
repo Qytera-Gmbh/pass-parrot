@@ -4,8 +4,8 @@
   "description": "A tool for aggregating test results and forwarding them to various destinations, such as HTML reports, Microsoft Teams or Slack.",
   "main": "index.js",
   "scripts": {
-    "test": "node --import ./test/loader.js ./test/run-unit-tests.ts",
-    "build": "tsc --project tsconfig-build.json && shx cp README.md package.json package-lock.json dist/",
+    "test": "node --import ./loader.js ./test/run-unit-tests.ts",
+    "build": "node --import ./loader.js build.ts",
     "lint": "npx eslint src/**/*.ts test/**/*.ts"
   },
   "author": "dev@qytera.de",
@@ -36,13 +36,12 @@
     "eslint": "^9.19.0",
     "eslint-plugin-perfectionist": "^4.7.0",
     "prettier": "^3.4.2",
-    "shx": "^0.3.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.22.0"
   },
   "dependencies": {
-    "@qytera/xray-client": "^0.0.2",
+    "@qytera/xray-client": "^0.0.4",
     "jira.js": "^4.0.6"
   }
 }
