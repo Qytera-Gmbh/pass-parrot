@@ -31,7 +31,13 @@ export function findFiles(dir: string, filter: (filename: string) => boolean): s
  * @returns the value
  */
 export function getEnv(
-  kind: "jira-password" | "jira-token" | "jira-username" | "xray-client-id" | "xray-client-secret"
+  kind:
+    | "jira-password"
+    | "jira-token"
+    | "jira-url"
+    | "jira-username"
+    | "xray-client-id"
+    | "xray-client-secret"
 ): string {
   let value: string | undefined;
   switch (kind) {
@@ -50,6 +56,8 @@ export function getEnv(
     case "jira-username":
       value = process.env.JIRA_USERNAME;
       break;
+    case "jira-url":
+      value = process.env.JIRA_URL;
   }
   if (!value) {
     throw new Error(`Environment variable is undefined: ${kind}`);
