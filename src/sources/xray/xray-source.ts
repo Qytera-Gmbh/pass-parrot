@@ -2,6 +2,7 @@ import type { XrayClientCloud } from "@qytera/xray-client";
 import { XrayClientServer } from "@qytera/xray-client";
 import type { Version3Client } from "jira.js";
 import { Version2Client } from "jira.js";
+import type { SearchForIssuesUsingJqlPost } from "jira.js/out/version3/parameters/index.js";
 import type { TestPlan } from "../../models/testplan-model.js";
 import type { Source } from "../source.js";
 import { convertStatus } from "./xray-status.js";
@@ -43,7 +44,10 @@ export class XraySource implements Source<string> {
     xrayClient: XrayClientCloud;
   }): Promise<TestPlan> {
     const parsedTestPlan: TestPlan = {
+      id: args.testPlanKey,
+      name: "unknown",
       tests: [],
+      url: `${args.url}/browse/${args.testPlanKey}`,
     };
     let startAt = 0;
     let hasMoreTests = true;
@@ -52,6 +56,7 @@ export class XraySource implements Source<string> {
         { jql: `issue in (${args.testPlanKey})`, limit: 1 },
         (testPlanResults) => [
           testPlanResults.results((testPlan) => [
+            testPlan.jira({ fields: ["summary"] }),
             testPlan.tests({ limit: 100, start: startAt }, (testResults) => [
               testResults.results((test) => [
                 test.jira({ fields: ["key", "summary"] }),
@@ -61,6 +66,7 @@ export class XraySource implements Source<string> {
           ]),
         ]
       );
+      parsedTestPlan.name = response.results?.at(0)?.jira?.summary as string;
       const returnedTests = response.results?.at(0)?.tests?.results;
       if (!returnedTests || returnedTests.length === 0) {
         hasMoreTests = false;
@@ -68,6 +74,7 @@ export class XraySource implements Source<string> {
         for (const issue of returnedTests) {
           if (issue?.jira && issue.status?.name) {
             parsedTestPlan.tests.push({
+              id: issue.jira.key as string,
               name: issue.jira.summary as string,
               status: convertStatus(issue.status.name),
               url: `${args.url}/browse/${issue.jira.key as string}`,
@@ -86,8 +93,22 @@ export class XraySource implements Source<string> {
     url: string;
     xrayClient: XrayClientServer;
   }): Promise<TestPlan> {
+    let result;
+    let query: SearchForIssuesUsingJqlPost = {
+      fields: ["summary"],
+      jql: `issue in (${args.testPlanKey})`,
+    };
+    // TypeScript won't let us search in the union of version 2 and 3 (jira.js problem).
+    if (args.jiraClient instanceof Version2Client) {
+      result = await args.jiraClient.issueSearch.searchForIssuesUsingJqlPost(query);
+    } else {
+      result = await args.jiraClient.issueSearch.searchForIssuesUsingJqlPost(query);
+    }
     const testPlan: TestPlan = {
+      id: args.testPlanKey,
+      name: result.issues?.at(0)?.fields.summary ?? "unknown",
       tests: [],
+      url: `${args.url}/browse/${args.testPlanKey}`,
     };
     const tests = await args.xrayClient.testPlans.getTests(args.testPlanKey);
     const testsByKey = new Map<
@@ -103,12 +124,11 @@ export class XraySource implements Source<string> {
     let startAt = 0;
     let hasMoreTests = true;
     while (hasMoreTests) {
-      const query = {
+      query = {
         fields: ["summary", "key", "id"],
         jql: `issue in (${[...testsByKey.keys()].join(",")})`,
         startAt: startAt,
       };
-      let result;
       // TypeScript won't let us search in the union of version 2 and 3 (jira.js problem).
       if (args.jiraClient instanceof Version2Client) {
         result = await args.jiraClient.issueSearch.searchForIssuesUsingJqlPost(query);
@@ -124,6 +144,7 @@ export class XraySource implements Source<string> {
             throw new Error(`Unexpected error occurred: ${issue.key} was not returned by Xray`);
           }
           testPlan.tests.push({
+            id: issue.fields.key as string,
             name: issue.fields.summary,
             status: convertStatus(xrayTest.latestStatus),
             url: `${args.url}/browse/${issue.key}`,

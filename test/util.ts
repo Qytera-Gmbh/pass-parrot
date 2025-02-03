@@ -36,6 +36,7 @@ export function getEnv(
     | "jira-token"
     | "jira-url"
     | "jira-username"
+    | "microsoft-teams-webhook-url"
     | "xray-client-id"
     | "xray-client-secret"
 ): string {
@@ -58,6 +59,10 @@ export function getEnv(
       break;
     case "jira-url":
       value = process.env.JIRA_URL;
+      break;
+    case "microsoft-teams-webhook-url":
+      value = process.env.MICROSOFT_TEAMS_WEBHOOK_URL;
+      break;
   }
   if (!value) {
     throw new Error(`Environment variable is undefined: ${kind}`);
