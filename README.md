@@ -5,20 +5,10 @@
   </span>
 </h1>
 
-<p>
-  <a href="https://www.npmjs.com/package/@qytera/pass-parrot">
-    <img src="https://img.shields.io/npm/v/@qytera/pass-parrot?style=flat-square" />
-  </a>
-  <a href="https://www.npmjs.com/package/@qytera/pass-parrot">
-    <img src="https://img.shields.io/npm/dm/@qytera/pass-parrot?style=flat-square" />
-  </a>
-  <a href="https://github.com/Qytera-Gmbh/pass-parrot/issues?q=is%3Aissue+is%3Aopen">
-    <img src="https://img.shields.io/github/issues-raw/qytera-gmbh/pass-parrot?style=flat-square" />
-  </a>
-  <a href="https://github.com/Qytera-Gmbh/pass-parrot/issues?q=is%3Aissue+is%3Aopen+no%3Aassignee">
-    <img src="https://img.shields.io/github/issues-search/qytera-gmbh/pass-parrot?label=unaddressed%20issues&query=no%3Aassignee%20is%3Aopen&style=flat-square" />
-  </a>
-</p>
+[![npm version](https://img.shields.io/npm/v/@qytera/pass-parrot?style=flat-square)](https://www.npmjs.com/package/@qytera/pass-parrot)
+[![npm downloads](https://img.shields.io/npm/dm/@qytera/pass-parrot?style=flat-square)](https://www.npmjs.com/package/@qytera/pass-parrot)
+[![open GitHub issues](https://img.shields.io/github/issues-raw/qytera-gmbh/pass-parrot?style=flat-square)](https://github.com/Qytera-Gmbh/pass-parrot/issues?q=is%3Aissue+is%3Aopen)
+[![unaddressed GitHub issues](https://img.shields.io/github/issues-search/qytera-gmbh/pass-parrot?label=unaddressed%20issues&query=no%3Aassignee%20is%3Aopen&style=flat-square)](https://github.com/Qytera-Gmbh/pass-parrot/issues?q=is%3Aissue+is%3Aopen+no%3Aassignee)
 
 A flexible and extensible tool for aggregating test results and forwarding them to various destinations, such as HTML reports, Microsoft Teams or Slack. Designed to bridge the gap between testers and management.
 
