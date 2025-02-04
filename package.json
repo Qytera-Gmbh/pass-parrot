@@ -42,8 +42,16 @@
   },
   "dependencies": {
     "@qytera/xray-client": "^0.0.6",
-    "adaptivecards": "^3.0.5",
+    "adaptivecards": "3.0.4",
     "canvas": "^3.1.0",
     "jira.js": "^4.0.6"
+  },
+  "//": "========================================================================================",
+  "//": "adaptivecards: https://github.com/microsoft/AdaptiveCards/issues/8319#issuecomment-2067556174",
+  "//": "========================================================================================",
+  "overrides": {
+    "adaptivecards": {
+      "swiper": "^6.0.0"
+    }
   }
 }
