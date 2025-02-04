@@ -3,19 +3,16 @@ import type { Test } from "./test-model.js";
 import type { TestResult } from "./test-result-model.js";
 
 /**
- * A test plan is a collection of tests.
+ * Stores tests and their results.
  */
-export interface TestPlan extends HasId, HasName, HasUrl {
-  /**
-   * The tests contained within the test plan.
-   */
-  tests: {
+export interface TestResults extends HasId, HasName, HasUrl {
+  results: {
     /**
-     * The latest result of the test.
+     * The result of the test.
      */
     result: TestResult;
     /**
-     * The test details.
+     * THe test details.
      */
     test: Test;
   }[];

@@ -1,4 +1,4 @@
-import type { TestPlan } from "../../models/test-plan-model.js";
+import type { TestResults } from "../../models/test-results-model.js";
 import { createPieChart } from "./card-chart.js";
 import type { AdaptiveCard } from "./card-model.js";
 
@@ -10,25 +10,25 @@ export interface AdaptiveCardMessage {
 /**
  * Returns a test plan card message that can be sent to a Microsoft Teams channel.
  *
- * @param testPlan the test plan to convert to a message
+ * @param results the test plan to convert to a message
  * @param details additional test plan details to include in the message
  * @returns the payload that can be sent to an incoming webhook
  *
  * @see https://dev.teams.microsoft.com/cards/new
  */
-export function getTestPlanCard(
-  testPlan: TestPlan,
+export function getTestResultsCard(
+  results: TestResults,
   details?: Record<string, string>
 ): AdaptiveCardMessage {
-  const passedTests = testPlan.tests.filter((test) => test.result.status === "pass").length;
-  const failedTests = testPlan.tests.filter((test) => test.result.status === "fail").length;
-  const skippedTests = testPlan.tests.filter((test) => test.result.status === "skipped").length;
-  const pendingTests = testPlan.tests.filter((test) => test.result.status === "pending").length;
-  const totalTests = testPlan.tests.length;
+  const passedTests = results.results.filter((test) => test.result.status === "pass").length;
+  const failedTests = results.results.filter((test) => test.result.status === "fail").length;
+  const skippedTests = results.results.filter((test) => test.result.status === "skipped").length;
+  const pendingTests = results.results.filter((test) => test.result.status === "pending").length;
+  const totalTests = results.results.length;
   const testPlanFacts = Object.entries(details ?? {}).map(([key, value]) => {
     return { title: key, value: value };
   });
-  const testPlanUrl = testPlan.url;
+  const testPlanUrl = results.url;
   const chart = createPieChart({
     fail: failedTests,
     pass: passedTests,

@@ -1,7 +1,7 @@
-import type { TestPlan } from "../../models/test-plan-model.js";
+import type { TestResults } from "../../models/test-results-model.js";
 import type { Drain } from "../drain.js";
 import type { AdaptiveCardMessage } from "./cards.js";
-import { getTestPlanCard } from "./cards.js";
+import { getTestResultsCard } from "./cards.js";
 
 export class MicrosoftTeamsDrain implements Drain<AdaptiveCardMessage> {
   private readonly incomingWebhookUrl: string;
@@ -10,8 +10,8 @@ export class MicrosoftTeamsDrain implements Drain<AdaptiveCardMessage> {
     this.incomingWebhookUrl = config.incomingWebhookUrl;
   }
 
-  public async writeTestPlan(testPlan: TestPlan): Promise<AdaptiveCardMessage> {
-    const card = getTestPlanCard(testPlan, { ["ID"]: testPlan.id, ["Name"]: testPlan.name });
+  public async writeTestResults(results: TestResults): Promise<AdaptiveCardMessage> {
+    const card = getTestResultsCard(results, { ["ID"]: results.id, ["Name"]: results.name });
     await fetch(this.incomingWebhookUrl, {
       body: JSON.stringify(card),
       headers: { ["Content-Type"]: "application/json" },

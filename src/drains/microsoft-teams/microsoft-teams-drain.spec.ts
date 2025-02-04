@@ -10,10 +10,10 @@ describe(path.relative(process.cwd(), import.meta.filename), () => {
     const drain = new MicrosoftTeamsDrain({
       incomingWebhookUrl: getEnv("microsoft-teams-webhook-url"),
     });
-    const card = await drain.writeTestPlan({
+    const card = await drain.writeTestResults({
       id: "PAPA-152",
       name: "Test Plan With Tests",
-      tests: [
+      results: [
         {
           result: { status: "pass", url: `${url}/browse/PAPA-151` },
           test: { id: "PAPA-151", name: "test 150", url: `${url}/browse/PAPA-151` },

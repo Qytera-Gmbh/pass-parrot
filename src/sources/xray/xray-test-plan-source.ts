@@ -4,17 +4,16 @@ import type { Version3Client } from "jira.js";
 import { Version2Client } from "jira.js";
 import type { ProjectDetails } from "jira.js/out/version3/models/index.js";
 import type { SearchForIssuesUsingJqlPost } from "jira.js/out/version3/parameters/index.js";
-import type { TestExecution } from "../../models/test-execution-model.js";
 import type { Test } from "../../models/test-model.js";
-import type { TestPlan } from "../../models/test-plan-model.js";
+import type { TestResults } from "../../models/test-results-model.js";
 import type { Source } from "../source.js";
 import { convertStatus } from "./xray-status.js";
 
 /**
- * The Xray source is responsible for fetching test report data from
- * [Xray](https://www.getxray.app/).
+ * The Xray test plan source is responsible for fetching test report data from
+ * [Xray](https://www.getxray.app/) test plans.
  */
-export class XraySource implements Source<string, string> {
+export class XraySource implements Source<string> {
   private readonly config: XraySourceOptions;
 
   /**
@@ -27,20 +26,11 @@ export class XraySource implements Source<string, string> {
   }
 
   /**
-   * Retrieves a test execution from the Xray API.
-   *
-   * @param testExecutionKey the test execution to retrieve
-   */
-  public getTestExecution(testExecutionKey: string): Promise<TestExecution> | TestExecution {
-    throw new Error("Method not implemented.");
-  }
-
-  /**
    * Retrieves a test plan from the Xray API.
    *
    * @param testPlanKey the test plan to retrieve
    */
-  public async getTestPlan(testPlanKey: string): Promise<TestPlan> {
+  public async getTestResults(testPlanKey: string): Promise<TestResults> {
     if (this.config.xray.client instanceof XrayClientServer) {
       return XraySource.getTestPlanServer({
         jiraClient: this.config.jira.client,
@@ -63,11 +53,11 @@ export class XraySource implements Source<string, string> {
     testPlanKey: string;
     url: string;
     xrayClient: XrayClientCloud;
-  }): Promise<TestPlan> {
-    const parsedTestPlan: TestPlan = {
+  }): Promise<TestResults> {
+    const parsedTestPlan: TestResults = {
       id: args.testPlanKey,
       name: "unknown",
-      tests: [],
+      results: [],
       url: `${args.url}/browse/${args.testPlanKey}`,
     };
     let startAt = 0;
@@ -121,7 +111,7 @@ export class XraySource implements Source<string, string> {
             | string
             | undefined;
           if (!testExecutionKey) {
-            parsedTestPlan.tests.push({
+            parsedTestPlan.results.push({
               result: {
                 status: "pending",
                 url: `${args.url}/browser/${args.testPlanKey}`,
@@ -131,7 +121,7 @@ export class XraySource implements Source<string, string> {
           } else {
             const testRun = testIssue.testRuns?.results?.at(0);
             if (!testRun?.status?.name) {
-              parsedTestPlan.tests.push({
+              parsedTestPlan.results.push({
                 result: {
                   status: "pending",
                   url: `${args.url}/browser/${testExecutionKey}`,
@@ -139,7 +129,7 @@ export class XraySource implements Source<string, string> {
                 test: test,
               });
             } else {
-              parsedTestPlan.tests.push({
+              parsedTestPlan.results.push({
                 result: {
                   status: convertStatus(testRun.status.name),
                   url: `${args.url}/projects/${projectKey}?selectedItem=com.atlassian.plugins.atlassian-connect-plugin%3Acom.xpandit.plugins.xray__testing-board&ac.testExecutionKey=${testExecutionKey}&ac.testKey=${testIssue.jira.key as string}`,
@@ -160,7 +150,7 @@ export class XraySource implements Source<string, string> {
     testPlanKey: string;
     url: string;
     xrayClient: XrayClientServer;
-  }): Promise<TestPlan> {
+  }): Promise<TestResults> {
     let result;
     let query: SearchForIssuesUsingJqlPost = {
       fields: ["summary"],
@@ -172,10 +162,10 @@ export class XraySource implements Source<string, string> {
     } else {
       result = await args.jiraClient.issueSearch.searchForIssuesUsingJqlPost(query);
     }
-    const testPlan: TestPlan = {
+    const testPlan: TestResults = {
       id: args.testPlanKey,
       name: result.issues?.at(0)?.fields.summary ?? "unknown",
-      tests: [],
+      results: [],
       url: `${args.url}/browse/${args.testPlanKey}`,
     };
     const tests = await args.xrayClient.testPlans.getTests(args.testPlanKey);
@@ -211,7 +201,7 @@ export class XraySource implements Source<string, string> {
           if (!xrayTest) {
             throw new Error(`Unexpected error occurred: ${issue.key} was not returned by Xray`);
           }
-          testPlan.tests.push({
+          testPlan.results.push({
             result: {
               status: convertStatus(xrayTest.latestStatus),
               url: `${args.url}/browse/${issue.key}`,

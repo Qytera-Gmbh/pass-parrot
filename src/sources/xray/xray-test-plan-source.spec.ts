@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, it } from "node:test";
 import { JIRA_CLIENT_CLOUD, XRAY_CLIENT_CLOUD } from "../../../test/clients.js";
 import { getEnv } from "../../../test/util.js";
-import { XraySource } from "./xray-source.js";
+import { XraySource } from "./xray-test-plan-source.js";
 
 describe(path.relative(process.cwd(), import.meta.filename), () => {
   describe("xray cloud", () => {
@@ -13,11 +13,11 @@ describe(path.relative(process.cwd(), import.meta.filename), () => {
         jira: { client: JIRA_CLIENT_CLOUD, url: url },
         xray: { client: XRAY_CLIENT_CLOUD },
       });
-      const testPlan = await source.getTestPlan("PAPA-152");
+      const testPlan = await source.getTestResults("PAPA-152");
       assert.deepStrictEqual(testPlan, {
         id: "PAPA-152",
         name: "test plan with 150 tests",
-        tests: [
+        results: [
           {
             result: { status: "pending", url: `${url}/browser/PAPA-152` },
             test: { id: "PAPA-151", name: "test 150", url: `${url}/browse/PAPA-151` },

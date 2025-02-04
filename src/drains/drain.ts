@@ -1,15 +1,15 @@
-import type { TestPlan } from "../models/test-plan-model.js";
+import type { TestResults } from "../models/test-results-model.js";
 
 /**
  * A drain represents a service or tool to which test information can be pushed, such as Slack,
  * Microsoft Teams or simply the standard output.
  */
-export interface Drain<TestPlanOutput> {
+export interface Drain<Output> {
   /**
-   * Writes a test plan, containing one or more tests.
+   * Writes test results, containing one or more tests and their results.
    *
-   * @param testPlan the details of the test plan to write
+   * @param results the results to write
    * @returns the drained result
    */
-  writeTestPlan(testPlan: TestPlan): Promise<TestPlanOutput>;
+  writeTestResults(results: TestResults): Promise<Output>;
 }

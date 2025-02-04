@@ -1,17 +1,15 @@
-import type { TestExecution } from "../models/test-execution-model.js";
-import type { TestPlan } from "../models/test-plan-model.js";
+import type { TestResults } from "../models/test-results-model.js";
 
 /**
- * A source represents a service or tool from which test information can be pulled, such as Xray or
- * an Excel sheet.
+ * A source represents a service or tool from which test information can be pulled, such as an Xray
+ * test execution, an Azure DevOps test run or a simple Excel sheet.
  */
-export interface Source<TestPlanFilter, TestExecutionFilter> {
-  getTestExecution(testExecution: TestExecutionFilter): Promise<TestExecution> | TestExecution;
+export interface Source<Filter> {
   /**
-   * Retrieves a test plan, containing one or more tests.
+   * Retrieves test results from the source, containing one or more tests and their results.
    *
-   * @param testPlan the details of the test plan to retrieve
-   * @returns the test plan
+   * @param source the source to retrieve results from
+   * @returns the test results
    */
-  getTestPlan(testPlan: TestPlanFilter): Promise<TestPlan> | TestPlan;
+  getTestResults(source: Filter): Promise<TestResults> | TestResults;
 }
