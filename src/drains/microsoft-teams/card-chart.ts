@@ -12,11 +12,11 @@ export function createPieChart(
     /**
      * The number of failing tests.
      */
-    fail: number;
+    failed: number;
     /**
      * The number of passing tests.
      */
-    pass: number;
+    passed: number;
     /**
      * The number of pending tests.
      */
@@ -24,7 +24,7 @@ export function createPieChart(
     /**
      * The number of skipped tests.
      */
-    skip: number;
+    skipped: number;
   },
   config?: {
     /**
@@ -72,7 +72,7 @@ export function createPieChart(
     pending: config?.colors?.pending ?? "#999999",
     skip: config?.colors?.skip ?? "#FFC107",
   };
-  const total = stats.pass + stats.fail + stats.skip + stats.pending;
+  const total = stats.passed + stats.failed + stats.skipped + stats.pending;
   const ctx = canvas.getContext("2d");
   let startAngle = 0;
   // 1st line: bottom right slice
@@ -80,10 +80,10 @@ export function createPieChart(
   // 3rd line: top left slice
   // 4th line: top right slice
   for (const { color, value } of [
-    { color: colors.skip, value: stats.skip },
+    { color: colors.skip, value: stats.skipped },
     { color: colors.pending, value: stats.pending },
-    { color: colors.fail, value: stats.fail },
-    { color: colors.pass, value: stats.pass },
+    { color: colors.fail, value: stats.failed },
+    { color: colors.pass, value: stats.passed },
   ]) {
     if (value > 0) {
       const sliceAngle = (value / total) * 2 * Math.PI;
