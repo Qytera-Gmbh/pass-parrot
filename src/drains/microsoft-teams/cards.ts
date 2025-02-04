@@ -8,13 +8,14 @@ export interface AdaptiveCardMessage {
 }
 
 /**
- * Returns a test plan card message that can be sent to a Microsoft Teams channel.
+ * Returns a test results card that can be sent to a Microsoft Teams channel.
  *
  * @param testResults the test results to convert to a message
  * @param details additional details to include in the message
  * @returns the payload that can be sent to an incoming webhook
  *
  * @see https://dev.teams.microsoft.com/cards/new
+ * @see https://adaptivecards.io/explorer/Column.html
  */
 export function getTestResultsCard(
   testResults: TestResults,
