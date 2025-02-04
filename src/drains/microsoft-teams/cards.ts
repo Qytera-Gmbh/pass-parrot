@@ -10,33 +10,36 @@ export interface AdaptiveCardMessage {
 /**
  * Returns a test plan card message that can be sent to a Microsoft Teams channel.
  *
- * @param results the test plan to convert to a message
- * @param details additional test plan details to include in the message
+ * @param testResults the test results to convert to a message
+ * @param details additional details to include in the message
  * @returns the payload that can be sent to an incoming webhook
  *
  * @see https://dev.teams.microsoft.com/cards/new
  */
 export function getTestResultsCard(
-  results: TestResults,
+  testResults: TestResults,
   details?: Record<string, string>
 ): AdaptiveCardMessage {
   const card = new Adaptive.AdaptiveCard();
   card.version = new Adaptive.Version(1, 5);
   card.addItem(
-    getHeading({ button: { title: "Open Test Results", url: results.url }, title: "Test Results" })
-  );
-  card.addItem(
-    getQuickSummary({
-      facts: Object.entries(details ?? {}).map(([key, value]) => new Adaptive.Fact(key, value)),
-      stats: {
-        failed: results.results.filter((test) => test.result.status === "fail").length,
-        passed: results.results.filter((test) => test.result.status === "pass").length,
-        pending: results.results.filter((test) => test.result.status === "pending").length,
-        skipped: results.results.filter((test) => test.result.status === "skipped").length,
-      },
+    getHeading({
+      button: { title: "Open Test Results", url: testResults.url },
+      title: "Test Results",
     })
   );
-  card.addItem(getTestList());
+  const summary = getQuickSummary({
+    facts: Object.entries(details ?? {}).map(([key, value]) => new Adaptive.Fact(key, value)),
+    stats: {
+      failed: testResults.results.filter((test) => test.result.status === "fail").length,
+      passed: testResults.results.filter((test) => test.result.status === "pass").length,
+      pending: testResults.results.filter((test) => test.result.status === "pending").length,
+      skipped: testResults.results.filter((test) => test.result.status === "skipped").length,
+    },
+  });
+  summary.separator = true;
+  card.addItem(summary);
+  card.addItem(getTestList(testResults.results));
   const json = card.toJSON();
   if (!json) {
     throw new Error("failed to create adaptive card");
@@ -58,7 +61,7 @@ function getHeading(config: {
   title: string;
 }): Adaptive.CardElement {
   const heading = new Adaptive.ColumnSet();
-  const titleColumn = new Adaptive.Column("auto");
+  const titleColumn = new Adaptive.Column("stretch");
   const title = new Adaptive.TextBlock(config.title);
   title.color = Adaptive.TextColor.Accent;
   title.isSubtle = false;
@@ -69,9 +72,8 @@ function getHeading(config: {
   titleColumn.addItem(title);
   heading.addColumn(titleColumn);
   if (config.button) {
-    const buttonColumn = new Adaptive.Column("stretch");
+    const buttonColumn = new Adaptive.Column("auto");
     const button = new Adaptive.ActionSet();
-    button.horizontalAlignment = Adaptive.HorizontalAlignment.Right;
     const openUrlAction = new Adaptive.OpenUrlAction();
     openUrlAction.style = Adaptive.ActionStyle.Positive;
     openUrlAction.title = config.button.title;
@@ -106,18 +108,23 @@ function getQuickSummary(config: {
 }): Adaptive.CardElement {
   const summary = new Adaptive.ColumnSet();
 
-  // Additional facts.
-  if (config.facts && config.facts.length > 0) {
-    const additionalFactsColumn = new Adaptive.Column("auto");
-    additionalFactsColumn.verticalContentAlignment = Adaptive.VerticalAlignment.Top;
-    const facts = new Adaptive.FactSet();
-    facts.horizontalAlignment = Adaptive.HorizontalAlignment.Left;
-    facts.facts = config.facts;
-    summary.addColumn(additionalFactsColumn);
-  }
+  // Chart.
+  const chartColumn = new Adaptive.Column("auto");
+  chartColumn.horizontalAlignment = Adaptive.HorizontalAlignment.Center;
+  chartColumn.verticalContentAlignment = Adaptive.VerticalAlignment.Center;
+  const pieChart = new Adaptive.Image();
+  pieChart.url = createPieChart({
+    failed: config.stats.failed,
+    passed: config.stats.passed,
+    pending: config.stats.pending,
+    skipped: config.stats.skipped,
+  });
+  chartColumn.addItem(pieChart);
+  summary.addColumn(chartColumn);
 
   // Tests summary.
   const testsColumn = new Adaptive.Column("auto");
+  testsColumn.horizontalAlignment = Adaptive.HorizontalAlignment.Center;
   testsColumn.verticalContentAlignment = Adaptive.VerticalAlignment.Top;
   const testFacts = new Adaptive.FactSet();
   testFacts.facts = [
@@ -139,25 +146,33 @@ function getQuickSummary(config: {
   testsColumn.addItem(testFacts);
   summary.addColumn(testsColumn);
 
-  // Chart.
-  const chartColumn = new Adaptive.Column("auto");
-  chartColumn.verticalContentAlignment = Adaptive.VerticalAlignment.Top;
-  const pieChart = new Adaptive.Image();
-  pieChart.url = createPieChart({
-    failed: config.stats.failed,
-    passed: config.stats.passed,
-    pending: config.stats.pending,
-    skipped: config.stats.skipped,
-  });
-  chartColumn.addItem(pieChart);
-  summary.addColumn(chartColumn);
+  // Additional facts.
+  if (config.facts && config.facts.length > 0) {
+    const additionalFactsColumn = new Adaptive.Column("stretch");
+    additionalFactsColumn.horizontalAlignment = Adaptive.HorizontalAlignment.Center;
+    additionalFactsColumn.verticalContentAlignment = Adaptive.VerticalAlignment.Top;
+    additionalFactsColumn.spacing = Adaptive.Spacing.Large;
+    additionalFactsColumn.separator = true;
+    const facts = new Adaptive.FactSet();
+    facts.horizontalAlignment = Adaptive.HorizontalAlignment.Left;
+    facts.facts = config.facts;
+    additionalFactsColumn.addItem(facts);
+    summary.addColumn(additionalFactsColumn);
+  }
+
   return summary;
 }
 
-function getTestList(): Adaptive.CardElement {
+function getTestList(results: TestResults["results"]): Adaptive.CardElement {
+  const container = new Adaptive.Container();
+  if (results.length === 0) {
+    return container;
+  }
   const showTestsId = "show-tests-button";
   const hideTestsId = "hide-tests-button";
-  const container = new Adaptive.Container();
+  const testsListId = "tests-list";
+
+  // Buttons for toggling test results list.
   const showTestsButton = new Adaptive.ActionSet();
   showTestsButton.id = showTestsId;
   const showTestsAction = new Adaptive.ToggleVisibilityAction();
@@ -165,75 +180,73 @@ function getTestList(): Adaptive.CardElement {
   showTestsAction.iconUrl = "icon:TaskListLtr";
   showTestsAction.addTargetElement(showTestsId, false);
   showTestsAction.addTargetElement(hideTestsId, true);
+  showTestsAction.addTargetElement(testsListId, true);
   showTestsButton.addAction(showTestsAction);
   container.addItem(showTestsButton);
   const hideTestsButton = new Adaptive.ActionSet();
   hideTestsButton.id = hideTestsId;
+  hideTestsButton.isVisible = false;
   const hideTestsAction = new Adaptive.ToggleVisibilityAction();
-  showTestsAction.title = "Hide Tests";
-  showTestsAction.iconUrl = "icon:TaskListLtr";
-  showTestsAction.addTargetElement(showTestsId, true);
-  showTestsAction.addTargetElement(hideTestsId, false);
+  hideTestsAction.title = "Hide Tests";
+  hideTestsAction.iconUrl = "icon:TaskListLtr";
+  hideTestsAction.addTargetElement(showTestsId, true);
+  hideTestsAction.addTargetElement(hideTestsId, false);
+  hideTestsAction.addTargetElement(testsListId, false);
   hideTestsButton.addAction(hideTestsAction);
   container.addItem(hideTestsButton);
+
+  // Container containing test results list.
+  const testResultsContainer = new Adaptive.Container();
+  testResultsContainer.id = testsListId;
+  testResultsContainer.isVisible = false;
+  container.addItem(testResultsContainer);
+
+  for (const testResult of results) {
+    const testResultColumns = new Adaptive.ColumnSet();
+    const openTestButtonColumn = new Adaptive.Column("auto");
+    openTestButtonColumn.verticalContentAlignment = Adaptive.VerticalAlignment.Center;
+    testResultColumns.addColumn(openTestButtonColumn);
+    const testStatusColumn = new Adaptive.Column("auto");
+    testStatusColumn.verticalContentAlignment = Adaptive.VerticalAlignment.Center;
+    testResultColumns.addColumn(testStatusColumn);
+    const testNameColumn = new Adaptive.Column("stretch");
+    testNameColumn.verticalContentAlignment = Adaptive.VerticalAlignment.Center;
+    testResultColumns.addColumn(testNameColumn);
+    testResultsContainer.addItem(testResultColumns);
+
+    // Test button column content.
+    const openTestButton = new Adaptive.ActionSet();
+    const openTestAction = new Adaptive.OpenUrlAction();
+    openTestAction.iconUrl = "icon:CursorClick";
+    openTestAction.style = Adaptive.ActionStyle.Positive;
+    openTestAction.url = testResult.result.url;
+    openTestButton.addAction(openTestAction);
+    openTestButtonColumn.addItem(openTestButton);
+
+    // Test status column content.
+    const icon = new Adaptive.TextBlock("\u2589");
+    icon.size = Adaptive.TextSize.ExtraLarge;
+    switch (testResult.result.status) {
+      case "fail":
+        icon.color = Adaptive.TextColor.Attention;
+        break;
+      case "pass":
+        icon.color = Adaptive.TextColor.Good;
+        break;
+      case "pending":
+        icon.color = Adaptive.TextColor.Default;
+        break;
+      case "skipped":
+        icon.color = Adaptive.TextColor.Warning;
+        break;
+    }
+    testStatusColumn.addItem(icon);
+
+    // Test name column content.
+    const testNameBlock = new Adaptive.TextBlock(testResult.test.name);
+    testNameBlock.size = Adaptive.TextSize.Medium;
+    testNameBlock.weight = Adaptive.TextWeight.Bolder;
+    testNameColumn.addItem(testNameBlock);
+  }
   return container;
 }
-
-const CARD = {
-  $schema: "https://adaptivecards.io/schemas/adaptive-card.json",
-  body: [
-    {
-      columns: [
-        {
-          items: [
-            {
-              actions: [
-                {
-                  iconUrl: "icon:CursorClick",
-                  id: "wetter",
-                  style: "positive",
-                  type: "Action.OpenUrl",
-                  url: "https://example.org",
-                },
-              ],
-              type: "ActionSet",
-            },
-          ],
-          type: "Column",
-          width: "auto",
-        },
-        {
-          horizontalAlignment: "Center",
-          items: [
-            {
-              color: "Good",
-              horizontalAlignment: "Center",
-              name: "Checkmark",
-              size: "Small",
-              style: "Filled",
-              type: "Icon",
-            },
-          ],
-          type: "Column",
-          width: "auto",
-        },
-        {
-          items: [
-            {
-              text: "TCA TR Wetterdaten",
-              type: "TextBlock",
-              wrap: true,
-            },
-          ],
-          type: "Column",
-          width: "stretch",
-        },
-      ],
-      type: "ColumnSet",
-    },
-  ],
-  rtl: false,
-  type: "AdaptiveCard",
-  version: "1.5",
-  verticalContentAlignment: "Center",
-};
