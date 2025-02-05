@@ -7,7 +7,7 @@ export const XRAY_CLIENT_CLOUD = new XrayClientCloud({
     clientId: getEnv("xray-client-id"),
     clientSecret: getEnv("xray-client-secret"),
   },
-  url: "https://xray.cloud.getxray.app",
+  url: getEnv("xray-url"),
 });
 
 export const JIRA_CLIENT_CLOUD = new Version3Client({
