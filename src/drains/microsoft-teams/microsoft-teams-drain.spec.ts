@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import path from "node:path";
 import { describe, it } from "node:test";
-import { getEnv } from "../../../test/util.js";
+import { getEnv } from "../../util/env.js";
 import { MicrosoftTeamsDrain } from "./microsoft-teams-drain.js";
 
 describe(path.relative(process.cwd(), import.meta.filename), () => {
